@@ -1,0 +1,47 @@
+# Intentionally vulnerable Python script for testing vulnerability scanners
+
+import os
+from flask import Flask, request, redirect, url_for
+
+app = Flask(__name__)
+
+# Vulnerability 1: Command Injection
+@app.route('/execute', methods=['GET'])
+def execute():
+    command = request.args.get('cmd')
+    result = os.system('ping -c 4 ' + command)
+    return f"Command executed. Result: {result}"
+
+# Vulnerability 2: SQL Injection
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form['username']
+    password = request.form['password']
+    query = f"SELECT * FROM users WHERE username='{username}' AND password='{password}'"
+    # Vulnerability: Vulnerable to SQL injection
+    # Instead, use parameterized queries or ORM
+    return redirect(url_for('home'))
+
+# Vulnerability 3: Cross-Site Scripting (XSS)
+@app.route('/search')
+def search():
+    query = request.args.get('query')
+    # Vulnerability: Unsafely rendering user input without proper escaping
+    return f'Search results for: {query}'
+
+# Vulnerability 4: Insecure Direct Object References (IDOR)
+@app.route('/user/<id>')
+def get_user(id):
+    # Vulnerability: Directly using user input as object reference without authorization check
+    return f'User details for ID: {id}'
+
+# Vulnerability 5: Insecure Deserialization
+@app.route('/load_data', methods=['POST'])
+def load_data():
+    data = request.data
+    # Vulnerability: Deserializing data from an untrusted source
+    # This can lead to code execution or unexpected behavior
+    return 'Data loaded successfully'
+
+if __name__ == '__main__':
+    app.run(debug=True)
